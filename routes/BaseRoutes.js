@@ -1,4 +1,9 @@
 class BaseRoutes {
+  constructor() {
+    this.router = require('express').Router();
+    this.registerRoutes();
+  }
+
   handle(ControllerClass, methodName) {
     return (req, res) => {
       const controller = new ControllerClass();

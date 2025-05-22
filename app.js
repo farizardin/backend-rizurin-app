@@ -1,6 +1,6 @@
 
 const express = require('express');
-const IndexRoutes = require('./routes/IndexRoutes');
+const ROUTES = require('./routes');
 
 class App {
   constructor() {
@@ -14,7 +14,7 @@ class App {
   }
 
   routes() {
-    this.app.use('/api/hello', new IndexRoutes().router);
+    this.app.use('/api/artworks', new ROUTES.ArtworkRoutes().router);
   }
 
   listen(port, callback) {
