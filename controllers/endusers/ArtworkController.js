@@ -3,7 +3,18 @@ const BaseController = require("../BaseController");
 
 class ArtController extends BaseController {
   getHello() {
-    this.res.json(BaseOutput.toJson({}, 'Index controller!'));
+    var arr =[
+      {
+        id: 1,
+        name: 'tes',
+      },
+      {
+        id: 2,
+        name: 'tesw',
+      }
+    ]
+    // this.res.json(this.outputClass().toJson({}, 'Artwork Controller'));
+    this.res.json(this.outputClass().toArray(arr, 'Artwork Controller'));
   }
 }
 

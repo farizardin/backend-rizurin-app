@@ -1,7 +1,6 @@
 class ObjectStorageService {
     constructor() {
-      this.router = require('express').Router();
-      this.registerRoutes();
+        //implemented soon;
     }
   
     store(params) {
