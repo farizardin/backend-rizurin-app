@@ -3,15 +3,17 @@ class BaseController {
   constructor() {
     this.req = null;
     this.res = null;
-    this.output = BaseOutput;
+    this.out = BaseOutput;
   }
+
   setRequest(req, res) {
     this.req = req;
     this.res = res;
+    this.out.setResponse(this.res);
   }
 
-  outputClass() {
-    return this.output;
+  output() {
+    return this.out;
   }
 }
 
