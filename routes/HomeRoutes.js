@@ -2,14 +2,14 @@ const express = require('express');
 const BaseRoutes = require('./BaseRoutes');
 const CONTROLLERS = require('../controllers');
 
-class ArtworkRoutes extends BaseRoutes {
+class HomeRoutes extends BaseRoutes {
   constructor() {
     super();
   }
 
   registerRoutes() {
-    this.router.get('/', this.handle(CONTROLLERS.endusers.ArtworkController, 'getHello'));
+    this.router.get('/', this.handle(CONTROLLERS.HomeController, 'index'));
   }
 }
 
-module.exports = ArtworkRoutes;
+module.exports = HomeRoutes;

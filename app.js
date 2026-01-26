@@ -14,7 +14,7 @@ class App {
   }
 
   routes() {
-    this.app.use('/api/artworks', new ROUTES.ArtworkRoutes().router);
+    this.app.use('/home', new ROUTES.HomeRoutes().router);
   }
 
   listen(port, callback) {

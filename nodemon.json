@@ -1,0 +1,20 @@
+{
+  "watch": [
+    "app.js",
+    "server.js",
+    "routes",
+    "controllers",
+    "models",
+    "services",
+    "config",
+    "outputs"
+  ],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules",
+    "migrations"
+  ],
+  "delay": "1s",
+  "legacyWatch": true,
+  "verbose": true
+}

@@ -40,13 +40,6 @@ class BaseOutput {
     }
   
     asJson() {
-      return {
-        statusCode: this.code,
-        json: this.asArray(),
-      };
-    }
-  
-    asArray() {
       const result = {
         status: this.status,
         message: this.message,
