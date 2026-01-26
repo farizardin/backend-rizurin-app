@@ -25,7 +25,13 @@ class BaseOutput {
     if (clazz && func && typeof clazz[func] === 'function') {
       obj = clazz[func](data);
     }
-    return this.getResponse().json(new this('success', 200, message, obj).asJson());
+    // Deprecated: uses globally set response object
+    const res = this.getResponse();
+    if (!res) {
+      console.warn('BaseOutput.toJson called without a response object. Use BaseOutput.sendJson or controller.output().toJson instead.');
+      return new this('success', 200, message, obj).asJson();
+    }
+    return res.json(new this('success', 200, message, obj).asJson());
   }
 
   static toArray(data = [], message = 'Success', clazz = null, func = null) {
@@ -38,7 +44,35 @@ class BaseOutput {
       objArr = [...data];
     }
 
-    return this.getResponse().json(new this('success', 200, message, objArr, pagination).asJson());
+    // Deprecated: uses globally set response object
+    const res = this.getResponse();
+    if (!res) {
+      console.warn('BaseOutput.toArray called without a response object. Use BaseOutput.sendArray or controller.output().toArray instead.');
+      return new this('success', 200, message, objArr, pagination).asJson();
+    }
+    return res.json(new this('success', 200, message, objArr, pagination).asJson());
+  }
+
+  // Thread-safe methods that accept response object explicitly
+  static sendJson(res, data = {}, message = 'Success', clazz = null, func = null) {
+    let obj = data;
+    if (clazz && func && typeof clazz[func] === 'function') {
+      obj = clazz[func](data);
+    }
+    return res.json(new this('success', 200, message, obj).asJson());
+  }
+
+  static sendArray(res, data = [], message = 'Success', clazz = null, func = null) {
+    const pagination = this.getPaginationProperties(data);
+    let objArr = [];
+
+    if (clazz && func && typeof clazz[func] === 'function') {
+      objArr = data.map(d => clazz[func](d));
+    } else {
+      objArr = [...data];
+    }
+
+    return res.json(new this('success', 200, message, objArr, pagination).asJson());
   }
 
   static getResponse() {
