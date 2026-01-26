@@ -72,11 +72,9 @@ class HomeController extends BaseController {
       ]
     }
     
-    this.res.json(
-      this.outputClass().toJson(
-        data,
-        'Landing page data successfully retrieved.'
-      )
+    this.output().toJson(
+      data,
+      'Landing page data successfully retrieved.'
     );
   }
 }
