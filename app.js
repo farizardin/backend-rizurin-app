@@ -15,6 +15,7 @@ class App {
 
   routes() {
     this.app.use('/home', new ROUTES.HomeRoutes().router);
+    this.app.use('/health', new ROUTES.HealthRoutes().router);
   }
 
   listen(port, callback) {

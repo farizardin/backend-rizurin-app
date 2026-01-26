@@ -1,0 +1,8 @@
+node_modules
+.git
+outputs
+migrations
+*.log
+.env
+README.md
+nodemon.json
