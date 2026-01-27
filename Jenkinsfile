@@ -81,6 +81,7 @@ npm test
     }
 
     stage('Push Docker Image') {
+      when { branch 'master' }
       steps {
         withCredentials([usernamePassword(
           credentialsId: DOCKER_CREDENTIALS_ID,
