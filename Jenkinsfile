@@ -25,9 +25,14 @@ pipeline {
           try {
             sh 'docker run -d --name pg-test-${BUILD_NUMBER} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test -p 5432:5432 postgres:15-alpine'
             sh 'sleep 10'
-            sh 'npm install'
-            sh 'npx sequelize-cli db:create --env test'
-            sh 'npm test'
+            sh """
+              docker run --rm \
+                --network host \
+                -v \$(pwd):/app \
+                -w /app \
+                node:20-alpine \
+                sh -c "npm install && npx sequelize-cli db:create --env test || true && npm test"
+            """
           } finally {
             sh 'docker stop pg-test-${BUILD_NUMBER} || true'
             sh 'docker rm pg-test-${BUILD_NUMBER} || true'
