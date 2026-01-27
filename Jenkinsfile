@@ -22,11 +22,16 @@ pipeline {
     stage('Test') {
       steps {
         script {
+          // Sanitize JOB_NAME for safe use in Docker names/labels
+          def sanitizedJobName = env.JOB_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
           def timestamp = System.currentTimeMillis()
-          def networkName = "test-net-${BUILD_NUMBER}-${timestamp}"
-          def pgContainer = "pg-test-${BUILD_NUMBER}-${timestamp}"
-          def nodeContainer = "node-test-${BUILD_NUMBER}-${timestamp}"
-          def commonLabel = "project=rizurin-test"
+          
+          def networkName = "test-net-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
+          def pgContainer = "pg-test-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
+          def nodeContainer = "node-test-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
+          
+          // Use a job-specific label to prevent killing containers from OTHER jobs
+          def jobLabel = "rizurin-job=${sanitizedJobName}"
           
           // Create a physical script to avoid quoting issues
           writeFile file: 'test-runner.sh', text: """#!/bin/sh
@@ -38,19 +43,19 @@ npm test
           sh "chmod +x test-runner.sh"
 
           try {
-            // Aggressive cleanup of stale resources from other builds
+            // ONLY cleanup resources belonging to THIS specific job
             sh """
-              docker ps -aq --filter "label=${commonLabel}" | xargs -r docker rm -f
-              docker network ls -q --filter "label=${commonLabel}" | xargs -r docker network rm
+              docker ps -aq --filter "label=${jobLabel}" | xargs -r docker rm -f
+              docker network ls -q --filter "label=${jobLabel}" | xargs -r docker network rm
             """
 
-            sh "docker network create --label ${commonLabel} ${networkName}"
-            sh "docker run -d --name ${pgContainer} --network ${networkName} --label ${commonLabel} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
+            sh "docker network create --label ${jobLabel} ${networkName}"
+            sh "docker run -d --name ${pgContainer} --network ${networkName} --label ${jobLabel} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
             
             sh 'sleep 15' // Wait for DB readiness
             
             // Execute the physical script
-            sh "docker run --name ${nodeContainer} --label ${commonLabel} --network ${networkName} -v \$(pwd):/app -w /app -e DB_HOST=${pgContainer} node:20-alpine ./test-runner.sh"
+            sh "docker run --name ${nodeContainer} --label ${jobLabel} --network ${networkName} -v \$(pwd):/app -w /app -e DB_HOST=${pgContainer} node:20-alpine ./test-runner.sh"
           } catch (e) {
             sh "docker logs ${nodeContainer} || true"
             sh "docker logs ${pgContainer} || true"
