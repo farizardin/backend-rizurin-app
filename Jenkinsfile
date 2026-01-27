@@ -70,6 +70,22 @@ npm test
       }
     }
 
+    stage('Migrate Production DB') {
+      when { branch 'master' }
+      steps {
+        script {
+          sh """
+            docker run --rm \
+              -v \$(pwd):/app \
+              -w /app \
+              -e NODE_ENV=production \
+              node:20-alpine \
+              sh -c "npm install && npx sequelize-cli db:create --env production || true && npx sequelize-cli db:migrate --env production"
+          """
+        }
+      }
+    }
+
     stage('Build Docker Image') {
       steps {
         sh """
