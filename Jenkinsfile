@@ -19,6 +19,23 @@ pipeline {
 
   stages {
 
+    stage('Test') {
+      steps {
+        script {
+          try {
+            sh 'docker run -d --name pg-test-${BUILD_NUMBER} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test -p 5432:5432 postgres:15-alpine'
+            sh 'sleep 10'
+            sh 'npm install'
+            sh 'npx sequelize-cli db:create --env test'
+            sh 'npm test'
+          } finally {
+            sh 'docker stop pg-test-${BUILD_NUMBER} || true'
+            sh 'docker rm pg-test-${BUILD_NUMBER} || true'
+          }
+        }
+      }
+    }
+
     stage('Build Docker Image') {
       steps {
         sh """

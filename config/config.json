@@ -2,22 +2,22 @@
   "development": {
     "username": "postgres",
     "password": "root",
-    "database": "my_app_test",
+    "database": "rizurin_app",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
   "test": {
-    "username": "root",
-    "password": null,
-    "database": "database_test",
+    "username": "postgres",
+    "password": "root",
+    "database": "rizurin_app_test",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "postgres"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
+    "username": "postgres",
+    "password": "root",
+    "database": "rizurin_app_production",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "postgres"
   }
 }
