@@ -5,14 +5,18 @@ class BaseRoutes {
   }
 
   handle(ControllerClass, methodName) {
-    return (req, res) => {
-      const controller = new ControllerClass();
-      controller.setRequest(req, res);
+    return async (req, res, next) => {
+      try {
+        const controller = new ControllerClass();
+        controller.setRequest(req, res, next);
 
-      if (typeof controller[methodName] !== 'function') {
-        return res.status(500).json({ error: 'Invalid controller method' });
+        if (typeof controller[methodName] !== 'function') {
+          return res.status(500).json({ error: 'Invalid controller method' });
+        }
+        return await controller[methodName]();
+      } catch (err) {
+        next(err);
       }
-      return controller[methodName]();
     };
   }
 }

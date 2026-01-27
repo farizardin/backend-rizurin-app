@@ -23,12 +23,16 @@ pipeline {
       steps {
         script {
           // Sanitize JOB_NAME for safe use in Docker names/labels
-          def sanitizedJobName = env.JOB_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
-          def timestamp = System.currentTimeMillis()
+          // Use more standard methods to avoid Jenkins sandbox security errors
+          def rawJobName = env.JOB_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
+          def sanitizedJobName = rawJobName.length() > 20 ? rawJobName.substring(0, 20) : rawJobName
           
-          def networkName = "test-net-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
-          def pgContainer = "pg-test-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
-          def nodeContainer = "node-test-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
+          def ts = String.valueOf(System.currentTimeMillis())
+          def timestamp = ts.length() > 8 ? ts.substring(ts.length() - 8) : ts
+          
+          def networkName = "net-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
+          def pgContainer = "pg-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
+          def nodeContainer = "node-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
           
           // Use a job-specific label to prevent killing containers from OTHER jobs
           def jobLabel = "rizurin-job=${sanitizedJobName}"
@@ -55,7 +59,7 @@ npm test
             sh 'sleep 15' // Wait for DB readiness
             
             // Execute the physical script
-            sh "docker run --name ${nodeContainer} --label ${jobLabel} --network ${networkName} -v \$(pwd):/app -w /app -e DB_HOST=${pgContainer} node:20-alpine ./test-runner.sh"
+            sh "docker run --name ${nodeContainer} --label ${jobLabel} --network ${networkName} -v \"\$(pwd)\":/app -w /app -e DB_HOST=${pgContainer} node:20-alpine ./test-runner.sh"
           } catch (e) {
             sh "docker logs ${nodeContainer} || true"
             sh "docker logs ${pgContainer} || true"
@@ -76,7 +80,7 @@ npm test
         script {
           sh """
             docker run --rm \
-              -v \$(pwd):/app \
+              -v "\$(pwd)":/app \
               -w /app \
               -e NODE_ENV=production \
               node:20-alpine \
