@@ -32,6 +32,11 @@ class App {
     this.app.use('/index', new ROUTES.HomeRoutes().router);
     this.app.use('/health', new ROUTES.HealthRoutes().router);
     this.app.use('/auth', new ROUTES.AuthRoutes().router);
+
+
+    // Global error handler must be last
+    const errorMiddleware = require('./middlewares/errorMiddleware');
+    this.app.use(errorMiddleware);
   }
 
   listen(port, callback) {

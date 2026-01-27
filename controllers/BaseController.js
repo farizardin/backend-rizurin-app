@@ -6,9 +6,10 @@ class BaseController {
     this.out = BaseOutput;
   }
 
-  setRequest(req, res) {
+  setRequest(req, res, next) {
     this.req = req;
     this.res = res;
+    this.next = next;
   }
 
   output() {
