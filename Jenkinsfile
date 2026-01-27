@@ -35,7 +35,13 @@ pipeline {
 
             sh "docker network create ${networkName}"
             sh "docker run -d --name ${pgContainer} --network ${networkName} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
-            sh 'sleep 10'
+            
+            // Debug: Check if network and container are correctly set up
+            sh "docker network inspect ${networkName}"
+            sh "docker ps -a --filter name=${pgContainer}"
+            
+            sh 'sleep 15' // Increased sleep for DB readiness
+            
             sh """
               docker run --rm --name ${nodeContainer} \
                 --network ${networkName} \
@@ -45,6 +51,10 @@ pipeline {
                 node:20-alpine \
                 sh -c "npm install && npx sequelize-cli db:create --env test || true && npm test"
             """
+          } catch (e) {
+            // Debug: Print logs if it fails
+            sh "docker logs ${pgContainer} || true"
+            throw e
           } finally {
             sh "docker stop ${nodeContainer} ${pgContainer} || true"
             sh "docker rm ${nodeContainer} ${pgContainer} || true"
