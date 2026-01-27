@@ -26,6 +26,7 @@ pipeline {
           def pgContainer = "pg-test-${BUILD_NUMBER}"
           def nodeContainer = "node-test-${BUILD_NUMBER}"
           def commonLabel = "project=rizurin-test"
+          def testCmd = "npm install && npx sequelize-cli db:create --env test || true && npm test"
           try {
             // Comprehensive cleanup: removes both labeled resources and legacy name patterns
             sh "docker ps -aq --filter 'label=${commonLabel}' | xargs -r docker rm -f"
@@ -39,19 +40,23 @@ pipeline {
             
             sh 'sleep 15' // Wait for DB readiness
             
+            // Removed --rm to ensure we can get logs after exit
             sh """
-              docker run --rm --name ${nodeContainer} --label ${commonLabel} \
+              docker run --name ${nodeContainer} --label ${commonLabel} \
                 --network ${networkName} \
                 -v \$(pwd):/app \
                 -w /app \
                 -e DB_HOST=${pgContainer} \
                 node:20-alpine \
-                sh -c 'npm install && npx sequelize-cli db:create --env test || true && npm test'
+                sh -c '${testCmd}'
             """
           } catch (e) {
+            // Log both containers on failure
+            sh "docker logs ${nodeContainer} || true"
             sh "docker logs ${pgContainer} || true"
             throw e
-          } finally {
+          }
+ finally {
             sh "docker stop ${nodeContainer} ${pgContainer} || true"
             sh "docker rm ${nodeContainer} ${pgContainer} || true"
             sh "docker network rm ${networkName} || true"
