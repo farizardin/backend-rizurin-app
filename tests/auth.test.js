@@ -11,19 +11,22 @@ describe('Auth Endpoints', () => {
             const res = await request(app)
                 .post('/auth/register')
                 .send({
+                    username: 'testuser',
                     email: 'test@example.com',
                     password: 'password123'
                 });
             expect(res.statusCode).toEqual(201);
             expect(res.body.data).toHaveProperty('id');
+            expect(res.body.data).toHaveProperty('username', 'testuser');
             expect(res.body.data).toHaveProperty('email', 'test@example.com');
         });
 
         it('should not register a user with existing email', async () => {
-            await User.create({ email: 'test@example.com', password: 'password123' });
+            await User.create({ username: 'existinguser', email: 'test@example.com', password: 'password123' });
             const res = await request(app)
                 .post('/auth/register')
                 .send({
+                    username: 'newuser',
                     email: 'test@example.com',
                     password: 'password123'
                 });
@@ -36,16 +39,28 @@ describe('Auth Endpoints', () => {
             await request(app)
                 .post('/auth/register')
                 .send({
+                    username: 'testuser',
                     email: 'test@example.com',
                     password: 'password123'
                 });
         });
 
-        it('should login with valid credentials', async () => {
+        it('should login with valid email', async () => {
             const res = await request(app)
                 .post('/auth/login')
                 .send({
-                    email: 'test@example.com',
+                    login: 'test@example.com',
+                    password: 'password123'
+                });
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data).toHaveProperty('token');
+        });
+
+        it('should login with valid username', async () => {
+            const res = await request(app)
+                .post('/auth/login')
+                .send({
+                    login: 'testuser',
                     password: 'password123'
                 });
             expect(res.statusCode).toEqual(200);
@@ -56,7 +71,7 @@ describe('Auth Endpoints', () => {
             const res = await request(app)
                 .post('/auth/login')
                 .send({
-                    email: 'test@example.com',
+                    login: 'test@example.com',
                     password: 'wrongpassword'
                 });
             expect(res.statusCode).toEqual(401);
