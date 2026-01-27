@@ -23,22 +23,30 @@ pipeline {
       steps {
         script {
           def networkName = "test-net-${BUILD_NUMBER}"
+          def pgContainer = "pg-test-${BUILD_NUMBER}"
+          def nodeContainer = "node-test-${BUILD_NUMBER}"
           try {
+            // Pattern-based cleanup for ALL matching resources to ensure a clean slate
+            sh '''
+              docker ps -aq --filter "name=pg-test-" --filter "name=node-test-" | xargs -r docker rm -f
+              docker network ls -q --filter "name=test-net-" | xargs -r docker network rm
+            '''
+
             sh "docker network create ${networkName}"
-            sh "docker run -d --name pg-test-${BUILD_NUMBER} --network ${networkName} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
+            sh "docker run -d --name ${pgContainer} --network ${networkName} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
             sh 'sleep 10'
             sh """
-              docker run --rm \
+              docker run --rm --name ${nodeContainer} \
                 --network ${networkName} \
                 -v \$(pwd):/app \
                 -w /app \
-                -e DB_HOST=pg-test-${BUILD_NUMBER} \
+                -e DB_HOST=${pgContainer} \
                 node:20-alpine \
                 sh -c "npm install && npx sequelize-cli db:create --env test || true && npm test"
             """
           } finally {
-            sh "docker stop pg-test-${BUILD_NUMBER} || true"
-            sh "docker rm pg-test-${BUILD_NUMBER} || true"
+            sh "docker stop ${nodeContainer} ${pgContainer} || true"
+            sh "docker rm ${nodeContainer} ${pgContainer} || true"
             sh "docker network rm ${networkName} || true"
           }
         }
