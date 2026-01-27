@@ -25,34 +25,30 @@ pipeline {
           def networkName = "test-net-${BUILD_NUMBER}"
           def pgContainer = "pg-test-${BUILD_NUMBER}"
           def nodeContainer = "node-test-${BUILD_NUMBER}"
+          def commonLabel = "project=rizurin-test"
           try {
-            // Pattern-based cleanup for ALL matching resources to ensure a clean slate
-            sh '''
-              docker ps -aq --filter "name=pg-test-" | xargs -r docker rm -f
-              docker ps -aq --filter "name=node-test-" | xargs -r docker rm -f
-              docker network ls -q --filter "name=test-net-" | xargs -r docker network rm
-            '''
+            // Comprehensive cleanup: removes both labeled resources and legacy name patterns
+            sh "docker ps -aq --filter 'label=${commonLabel}' | xargs -r docker rm -f"
+            sh "docker ps -aq --filter 'name=pg-test-' | xargs -r docker rm -f"
+            sh "docker ps -aq --filter 'name=node-test-' | xargs -r docker rm -f"
+            sh "docker network ls -q --filter 'label=${commonLabel}' | xargs -r docker network rm"
+            sh "docker network ls -q --filter 'name=test-net-' | xargs -r docker network rm"
 
-            sh "docker network create ${networkName}"
-            sh "docker run -d --name ${pgContainer} --network ${networkName} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
+            sh "docker network create --label ${commonLabel} ${networkName}"
+            sh "docker run -d --name ${pgContainer} --network ${networkName} --label ${commonLabel} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
             
-            // Debug: Check if network and container are correctly set up
-            sh "docker network inspect ${networkName}"
-            sh "docker ps -a --filter name=${pgContainer}"
-            
-            sh 'sleep 15' // Increased sleep for DB readiness
+            sh 'sleep 15' // Wait for DB readiness
             
             sh """
-              docker run --rm --name ${nodeContainer} \
+              docker run --rm --name ${nodeContainer} --label ${commonLabel} \
                 --network ${networkName} \
                 -v \$(pwd):/app \
                 -w /app \
                 -e DB_HOST=${pgContainer} \
                 node:20-alpine \
-                sh -c "npm install && npx sequelize-cli db:create --env test || true && npm test"
+                sh -c 'npm install && npx sequelize-cli db:create --env test || true && npm test'
             """
           } catch (e) {
-            // Debug: Print logs if it fails
             sh "docker logs ${pgContainer} || true"
             throw e
           } finally {
