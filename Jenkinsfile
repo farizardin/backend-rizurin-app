@@ -23,8 +23,12 @@ pipeline {
       steps {
         script {
           // Sanitize JOB_NAME for safe use in Docker names/labels
-          def sanitizedJobName = env.JOB_NAME.replaceAll(/[^a-zA-Z0-9]/, '-').take(20)
-          def timestamp = "${System.currentTimeMillis()}".takeLast(8)
+          // Use more standard methods to avoid Jenkins sandbox security errors
+          def rawJobName = env.JOB_NAME.replaceAll(/[^a-zA-Z0-9]/, '-')
+          def sanitizedJobName = rawJobName.length() > 20 ? rawJobName.substring(0, 20) : rawJobName
+          
+          def ts = String.valueOf(System.currentTimeMillis())
+          def timestamp = ts.length() > 8 ? ts.substring(ts.length() - 8) : ts
           
           def networkName = "net-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
           def pgContainer = "pg-${sanitizedJobName}-${BUILD_NUMBER}-${timestamp}"
