@@ -22,22 +22,26 @@ pipeline {
     stage('Test') {
       steps {
         script {
-          def networkName = "test-net-${BUILD_NUMBER}"
-          def pgContainer = "pg-test-${BUILD_NUMBER}"
-          def nodeContainer = "node-test-${BUILD_NUMBER}"
+          def timestamp = System.currentTimeMillis()
+          def networkName = "test-net-${BUILD_NUMBER}-${timestamp}"
+          def pgContainer = "pg-test-${BUILD_NUMBER}-${timestamp}"
+          def nodeContainer = "node-test-${BUILD_NUMBER}-${timestamp}"
           def commonLabel = "project=rizurin-test"
           
-          try {
-            // 1. Explicitly kill the specific containers for this build if they exist
-            sh "docker rm -f ${nodeContainer} ${pgContainer} || true"
-            sh "docker network rm ${networkName} || true"
+          // Create a physical script to avoid quoting issues
+          writeFile file: 'test-runner.sh', text: """#!/bin/sh
+set -e
+npm install
+npx sequelize-cli db:create --env test || true
+npm test
+"""
+          sh "chmod +x test-runner.sh"
 
-            // 2. Multi-layered cleanup for stale resources
+          try {
+            // Aggressive cleanup of stale resources from other builds
             sh """
-              docker ps -aq --filter 'label=${commonLabel}' | xargs -r docker rm -f
-              docker ps -aq | xargs -I {} docker inspect --format '{{.Name}} {{.Id}}' {} | grep -E '/pg-test-|/node-test-' | awk '{print \$2}' | xargs -r docker rm -f
-              docker network ls -q --filter 'label=${commonLabel}' | xargs -r docker network rm
-              docker network ls -q | grep 'test-net-' | xargs -r docker network rm || true
+              docker ps -aq --filter "label=${commonLabel}" | xargs -r docker rm -f
+              docker network ls -q --filter "label=${commonLabel}" | xargs -r docker network rm
             """
 
             sh "docker network create --label ${commonLabel} ${networkName}"
@@ -45,8 +49,8 @@ pipeline {
             
             sh 'sleep 15' // Wait for DB readiness
             
-            // 3. Fixed quoting using escaped double quotes to ensure "sh -c" gets the whole string
-            sh "docker run --name ${nodeContainer} --label ${commonLabel} --network ${networkName} -v \$(pwd):/app -w /app -e DB_HOST=${pgContainer} node:20-alpine sh -c \"npm install && npx sequelize-cli db:create --env test || true && npm test\""
+            // Execute the physical script
+            sh "docker run --name ${nodeContainer} --label ${commonLabel} --network ${networkName} -v \$(pwd):/app -w /app -e DB_HOST=${pgContainer} node:20-alpine ./test-runner.sh"
           } catch (e) {
             sh "docker logs ${nodeContainer} || true"
             sh "docker logs ${pgContainer} || true"
@@ -55,6 +59,7 @@ pipeline {
             sh "docker stop ${nodeContainer} ${pgContainer} || true"
             sh "docker rm ${nodeContainer} ${pgContainer} || true"
             sh "docker network rm ${networkName} || true"
+            sh "rm -f test-runner.sh"
           }
         }
       }
