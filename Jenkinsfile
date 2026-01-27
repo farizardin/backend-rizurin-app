@@ -22,20 +22,24 @@ pipeline {
     stage('Test') {
       steps {
         script {
+          def networkName = "test-net-${BUILD_NUMBER}"
           try {
-            sh 'docker run -d --name pg-test-${BUILD_NUMBER} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test -p 5432:5432 postgres:15-alpine'
+            sh "docker network create ${networkName}"
+            sh "docker run -d --name pg-test-${BUILD_NUMBER} --network ${networkName} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
             sh 'sleep 10'
             sh """
               docker run --rm \
-                --network host \
+                --network ${networkName} \
                 -v \$(pwd):/app \
                 -w /app \
+                -e DB_HOST=pg-test-${BUILD_NUMBER} \
                 node:20-alpine \
                 sh -c "npm install && npx sequelize-cli db:create --env test || true && npm test"
             """
           } finally {
-            sh 'docker stop pg-test-${BUILD_NUMBER} || true'
-            sh 'docker rm pg-test-${BUILD_NUMBER} || true'
+            sh "docker stop pg-test-${BUILD_NUMBER} || true"
+            sh "docker rm pg-test-${BUILD_NUMBER} || true"
+            sh "docker network rm ${networkName} || true"
           }
         }
       }
