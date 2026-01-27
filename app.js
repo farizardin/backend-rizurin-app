@@ -23,7 +23,7 @@ class App {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       credentials: true, // Jika menggunakan cookies/session
     };
-    
+
     this.app.use(cors(corsOptions));
     this.app.use(express.json());
   }
