@@ -28,7 +28,8 @@ pipeline {
           try {
             // Pattern-based cleanup for ALL matching resources to ensure a clean slate
             sh '''
-              docker ps -aq --filter "name=pg-test-" --filter "name=node-test-" | xargs -r docker rm -f
+              docker ps -aq --filter "name=pg-test-" | xargs -r docker rm -f
+              docker ps -aq --filter "name=node-test-" | xargs -r docker rm -f
               docker network ls -q --filter "name=test-net-" | xargs -r docker network rm
             '''
 
