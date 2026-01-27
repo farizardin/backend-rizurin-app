@@ -26,37 +26,32 @@ pipeline {
           def pgContainer = "pg-test-${BUILD_NUMBER}"
           def nodeContainer = "node-test-${BUILD_NUMBER}"
           def commonLabel = "project=rizurin-test"
-          def testCmd = "npm install && npx sequelize-cli db:create --env test || true && npm test"
+          
           try {
-            // Comprehensive cleanup: removes both labeled resources and legacy name patterns
-            sh "docker ps -aq --filter 'label=${commonLabel}' | xargs -r docker rm -f"
-            sh "docker ps -aq --filter 'name=pg-test-' | xargs -r docker rm -f"
-            sh "docker ps -aq --filter 'name=node-test-' | xargs -r docker rm -f"
-            sh "docker network ls -q --filter 'label=${commonLabel}' | xargs -r docker network rm"
-            sh "docker network ls -q --filter 'name=test-net-' | xargs -r docker network rm"
+            // 1. Explicitly kill the specific containers for this build if they exist
+            sh "docker rm -f ${nodeContainer} ${pgContainer} || true"
+            sh "docker network rm ${networkName} || true"
+
+            // 2. Multi-layered cleanup for stale resources
+            sh """
+              docker ps -aq --filter 'label=${commonLabel}' | xargs -r docker rm -f
+              docker ps -aq | xargs -I {} docker inspect --format '{{.Name}} {{.Id}}' {} | grep -E '/pg-test-|/node-test-' | awk '{print \$2}' | xargs -r docker rm -f
+              docker network ls -q --filter 'label=${commonLabel}' | xargs -r docker network rm
+              docker network ls -q | grep 'test-net-' | xargs -r docker network rm || true
+            """
 
             sh "docker network create --label ${commonLabel} ${networkName}"
             sh "docker run -d --name ${pgContainer} --network ${networkName} --label ${commonLabel} -e POSTGRES_PASSWORD=root -e POSTGRES_DB=rizurin_app_test postgres:15-alpine"
             
             sh 'sleep 15' // Wait for DB readiness
             
-            // Removed --rm to ensure we can get logs after exit
-            sh """
-              docker run --name ${nodeContainer} --label ${commonLabel} \
-                --network ${networkName} \
-                -v \$(pwd):/app \
-                -w /app \
-                -e DB_HOST=${pgContainer} \
-                node:20-alpine \
-                sh -c '${testCmd}'
-            """
+            // 3. Fixed quoting using escaped double quotes to ensure "sh -c" gets the whole string
+            sh "docker run --name ${nodeContainer} --label ${commonLabel} --network ${networkName} -v \$(pwd):/app -w /app -e DB_HOST=${pgContainer} node:20-alpine sh -c \"npm install && npx sequelize-cli db:create --env test || true && npm test\""
           } catch (e) {
-            // Log both containers on failure
             sh "docker logs ${nodeContainer} || true"
             sh "docker logs ${pgContainer} || true"
             throw e
-          }
- finally {
+          } finally {
             sh "docker stop ${nodeContainer} ${pgContainer} || true"
             sh "docker rm ${nodeContainer} ${pgContainer} || true"
             sh "docker network rm ${networkName} || true"
