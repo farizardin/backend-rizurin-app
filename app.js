@@ -23,7 +23,7 @@ class App {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       credentials: true, // Jika menggunakan cookies/session
     };
-    
+
     this.app.use(cors(corsOptions));
     this.app.use(express.json());
   }
@@ -31,6 +31,7 @@ class App {
   routes() {
     this.app.use('/index', new ROUTES.HomeRoutes().router);
     this.app.use('/health', new ROUTES.HealthRoutes().router);
+    this.app.use('/auth', new ROUTES.AuthRoutes().router);
   }
 
   listen(port, callback) {
