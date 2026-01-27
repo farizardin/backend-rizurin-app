@@ -31,6 +31,7 @@ class App {
   routes() {
     this.app.use('/index', new ROUTES.HomeRoutes().router);
     this.app.use('/health', new ROUTES.HealthRoutes().router);
+    this.app.use('/auth', new ROUTES.AuthRoutes().router);
   }
 
   listen(port, callback) {
