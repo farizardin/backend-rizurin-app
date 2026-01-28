@@ -20,10 +20,10 @@ describe('Visitor Tracking', () => {
 
         const visitor = await Visitor.findOne({ where: { ip: '1.2.3.4' } });
         expect(visitor).not.toBeNull();
-        expect(visitor.visitCount).toEqual(1);
+        expect(visitor.visit_count).toEqual(1);
     });
 
-    it('should increment visitCount for existing visitors', async () => {
+    it('should increment visit_count for existing visitors', async () => {
         // Initial visit
         await request(app)
             .get('/index')
@@ -35,7 +35,7 @@ describe('Visitor Tracking', () => {
             .set('X-Forwarded-For', '1.2.3.4');
 
         const visitor = await Visitor.findOne({ where: { ip: '1.2.3.4' } });
-        expect(visitor.visitCount).toEqual(2);
+        expect(visitor.visit_count).toEqual(2);
     });
 
     it('should return correct total unique visitors in /index/stats', async () => {
@@ -57,6 +57,7 @@ describe('Visitor Tracking', () => {
         const res = await request(app).get('/index/stats');
         expect(res.statusCode).toEqual(200);
         expect(res.body.data.totalVisitors).toEqual(2);
+        console.log(res.body);
     });
 
     it('should NOT track visits to excluded paths (stats, health)', async () => {

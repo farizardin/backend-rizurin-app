@@ -13,13 +13,14 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             unique: true
         },
-        visitCount: {
+        visit_count: {
             type: DataTypes.INTEGER,
             defaultValue: 0
         }
     }, {
         sequelize,
         modelName: 'Visitor',
+        underscored: true,
     });
     return Visitor;
 };

@@ -16,11 +16,11 @@ const visitorTracker = async (req, res, next) => {
         if (ip) {
             const [visitor, created] = await Visitor.findOrCreate({
                 where: { ip },
-                defaults: { visitCount: 1 }
+                defaults: { visit_count: 1 }
             });
 
             if (!created) {
-                await visitor.increment('visitCount');
+                await visitor.increment('visit_count');
             }
         }
 
