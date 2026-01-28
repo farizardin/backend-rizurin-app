@@ -6,6 +6,7 @@ const ROUTES = require('./routes');
 class App {
   constructor() {
     this.app = express();
+    this.app.set('trust proxy', true);
     this.middlewares();
     this.routes();
   }
@@ -26,6 +27,7 @@ class App {
 
     this.app.use(cors(corsOptions));
     this.app.use(express.json());
+    this.app.use(require('./middlewares/visitorTracker'));
   }
 
   routes() {

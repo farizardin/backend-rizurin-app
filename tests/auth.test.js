@@ -54,6 +54,8 @@ describe('Auth Endpoints', () => {
                 });
             expect(res.statusCode).toEqual(200);
             expect(res.body.data).toHaveProperty('token');
+            expect(res.body.data).toHaveProperty('expires_in', 3600);
+            expect(res.body.data.user).toHaveProperty('username', 'testuser');
         });
 
         it('should login with valid username', async () => {
@@ -65,6 +67,8 @@ describe('Auth Endpoints', () => {
                 });
             expect(res.statusCode).toEqual(200);
             expect(res.body.data).toHaveProperty('token');
+            expect(res.body.data).toHaveProperty('expires_in', 3600);
+            expect(res.body.data.user).toHaveProperty('email', 'test@example.com');
         });
 
         it('should not login with invalid password', async () => {
