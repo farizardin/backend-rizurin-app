@@ -18,7 +18,6 @@ yarn-error.log*
 coverage/
 
 # Test artifacts
-outputs/
 test-runner.sh
 
 # IDE / Editor
