@@ -14,10 +14,10 @@ module.exports = {
         dialect: "postgres"
     },
     production: {
-        username: process.env.DB_USERNAME || "postgres",
-        password: process.env.DB_PASSWORD || "root",
-        database: process.env.DB_NAME || "rizurin_app_production",
-        host: process.env.DB_HOST || "192.168.8.50",
+        username: "postgres",
+        password: "root",
+        database: "rizurin_app_production",
+        host: "192.168.8.50",
         dialect: "postgres"
     }
 };
