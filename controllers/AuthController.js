@@ -1,5 +1,7 @@
 const BaseController = require('./BaseController');
 const AuthService = require('../services/AuthService');
+const UserOutput = require('../outputs/UserOutput');
+const AuthOutput = require('../outputs/AuthOutput');
 
 class AuthController extends BaseController {
     async register() {
@@ -8,18 +10,22 @@ class AuthController extends BaseController {
         const user = await authService.register({ username, email, password });
         this.res.status(201);
         return this.output().toJson(
-            { id: user.id, username: user.username, email: user.email },
-            'User registered successfully'
+            user,
+            'User registered successfully',
+            UserOutput,
+            'userBasicOutput'
         );
     }
 
     async login() {
         const { login, password } = this.req.body;
         const authService = new AuthService();
-        const token = await authService.login(login, password);
+        const data = await authService.login(login, password);
         return this.output().toJson(
-            { token },
-            'Login successful'
+            data,
+            'Login successful',
+            AuthOutput,
+            'authWithUserOutput'
         );
     }
 }
