@@ -9,6 +9,7 @@ class HomeRoutes extends BaseRoutes {
 
   registerRoutes() {
     this.router.get('/', this.handle(CONTROLLERS.HomeController, 'index'));
+    this.router.get('/stats', this.handle(CONTROLLERS.HomeController, 'stats'));
   }
 }
 

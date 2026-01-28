@@ -1,4 +1,5 @@
 const BaseController = require("./BaseController");
+const { Visitor } = require("../models");
 
 class HomeController extends BaseController {
   index() {
@@ -74,6 +75,16 @@ class HomeController extends BaseController {
       },
       'Landing page data successfully retrieved.'
     );
+  }
+
+  async stats() {
+    try {
+      const totalVisitors = await Visitor.count();
+      this.output().toJson({ totalVisitors }, 'Visitor stats successfully retrieved.');
+    } catch (error) {
+      console.error('Error fetching visitor stats:', error);
+      this.output().toJson({ totalVisitors: 0 }, 'Failed to retrieve visitor stats.', 500);
+    }
   }
 }
 
