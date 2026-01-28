@@ -29,6 +29,10 @@ spec:
           env:
             - name: PORT
               value: "3001"
+            - name: NODE_ENV
+              value: "production"
+            - name: DB_HOST
+              value: "192.168.8.50"
           livenessProbe:
             httpGet:
               path: /health
