@@ -56,14 +56,14 @@ describe('Visitor Tracking', () => {
 
         const res = await request(app).get('/index/stats');
         expect(res.statusCode).toEqual(200);
-        expect(res.body.data.totalVisitors).toEqual(2);
+        expect(res.body.data.total_visitors).toEqual(2);
         console.log(res.body);
     });
 
     it('should NOT track visits to excluded paths (stats, health)', async () => {
         // Initial count
         const initialStats = await request(app).get('/index/stats');
-        const initialCount = initialStats.body.data.totalVisitors;
+        const initialCount = initialStats.body.data.total_visitors;
 
         // Visit excluded path
         await request(app)
@@ -75,7 +75,7 @@ describe('Visitor Tracking', () => {
             .set('X-Forwarded-For', '4.4.4.4');
 
         const finalStats = await request(app).get('/index/stats');
-        expect(finalStats.body.data.totalVisitors).toEqual(initialCount);
+        expect(finalStats.body.data.total_visitors).toEqual(initialCount);
     });
 
     it('should fallback to remoteAddress if X-Forwarded-For is missing', async () => {
