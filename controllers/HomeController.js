@@ -9,7 +9,7 @@ class HomeController extends BaseController {
         services: [
           {
             id: 1,
-            title: 'Artwork AI & Deep Learning',
+            title: 'AI & Deep Learning',
             descriptions: [
               "Custom AI model development",
               "LLM fine-tuning & inference optimization",
