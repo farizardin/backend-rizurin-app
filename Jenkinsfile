@@ -142,5 +142,17 @@ npm test
         }
       }
     }
+
+    stage('Patch Traefik Service') {
+      when { branch 'master' }
+      steps {
+        withCredentials([file(credentialsId: KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
+          sh """
+             # Ensure Traefik preserves client IP (fixes SNAT issue)
+             kubectl patch svc traefik -n kube-system -p '{"spec":{"externalTrafficPolicy":"Local"}}' || true
+          """
+        }
+      }
+    }
   }
 }
