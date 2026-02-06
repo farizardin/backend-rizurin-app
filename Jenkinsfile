@@ -128,7 +128,7 @@ npm test
       }
     }
 
-    stage('Run DB Migration Kubernetes Job)') {
+    stage('Run DB Migration Kubernetes Job') {
       when { branch 'master' }
       steps {
         withCredentials([file(credentialsId: KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {

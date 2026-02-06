@@ -1,6 +1,5 @@
 node_modules
 .git
-migrations
 *.log
 .env
 README.md
