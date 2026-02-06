@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rizurin-db-migrate
+  namespace: rizurin
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: 192.168.8.60:8085/rizurin/rizurin-app-api:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Running DB migration..."
+              npx sequelize-cli db:migrate --env production
