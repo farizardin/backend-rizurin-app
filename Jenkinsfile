@@ -134,6 +134,7 @@ npm test
         withCredentials([file(credentialsId: KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
           sh """
             kubectl delete job rizurin-db-migrate -n ${NAMESPACE} --ignore-not-found
+            kubectl apply -f k8s/migration.yaml
             kubectl wait --for=condition=complete job/rizurin-db-migrate -n ${NAMESPACE} --timeout=300s
           """
         }
