@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: rizurin-app-api
-          image: 192.168.8.60:8085/rizurin/rizurin-app-api:latest
+          image: 192.168.8.51:5000/rizurin/rizurin-app-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3001
@@ -55,4 +55,4 @@ spec:
               cpu: "500m"
               memory: "512Mi"
       imagePullSecrets:
-        - name: harbor-secret
+        - name: zot-secret
