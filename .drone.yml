@@ -44,21 +44,10 @@ steps:
       - name: dockersock
         path: /var/run/docker.sock
     commands:
-      # login (force HTTP safe)
       - echo "$DOCKER_PASS" | docker login http://192.168.8.51:5000 -u "$DOCKER_USER" --password-stdin
-
-      # aktifkan buildx
       - docker buildx create --use || true
-
-      # build pakai format docker (INI KUNCI FIX)
-      - docker buildx build \
-          --platform linux/amd64 \
-          --output type=docker \
-          -t 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} \
-          .
-
+      - docker buildx build --platform linux/amd64 --output type=docker -t 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} .
       - docker tag 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} 192.168.8.51:5000/rizurin/rizurin-app-api:latest
-
       - docker push 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER}
       - docker push 192.168.8.51:5000/rizurin/rizurin-app-api:latest
 
