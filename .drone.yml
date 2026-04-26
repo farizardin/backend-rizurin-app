@@ -99,9 +99,7 @@ steps:
       - kubectl apply -f k8s/
 
       # update image pakai commit SHA
-      - kubectl set image deployment/rizurin-app-api \
-        rizurin-app-api=192.168.8.51:5000/rizurin/prod/rizurin-app-api:${DRONE_COMMIT_SHA} \
-        -n rizurin
+      - kubectl set image deployment/rizurin-app-api rizurin-app-api=192.168.8.51:5000/rizurin/prod/rizurin-app-api:${DRONE_COMMIT_SHA} -n rizurin
 
       - kubectl rollout status deployment/rizurin-app-api -n rizurin
     when:
