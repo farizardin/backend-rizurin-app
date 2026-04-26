@@ -32,24 +32,36 @@ steps:
       branch:
         - master
 
-  # Build + Push (tanpa plugins/docker)
   - name: build_and_push_docker
     image: docker:20.10
     environment:
-      DOCKER_BUILDKIT: 0
       DOCKER_USER:
         from_secret: docker_user
       DOCKER_PASS:
         from_secret: docker_pass
+      DOCKER_TLS_CERTDIR: ""
     volumes:
       - name: dockersock
         path: /var/run/docker.sock
     commands:
-      - docker login 192.168.8.51:5000 -u "$DOCKER_USER" -p "$DOCKER_PASS"
-      - docker build -t 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} .
+      # login (force HTTP safe)
+      - echo "$DOCKER_PASS" | docker login http://192.168.8.51:5000 -u "$DOCKER_USER" --password-stdin
+
+      # aktifkan buildx
+      - docker buildx create --use || true
+
+      # build pakai format docker (INI KUNCI FIX)
+      - docker buildx build \
+          --platform linux/amd64 \
+          --output type=docker \
+          -t 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} \
+          .
+
       - docker tag 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} 192.168.8.51:5000/rizurin/rizurin-app-api:latest
+
       - docker push 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER}
       - docker push 192.168.8.51:5000/rizurin/rizurin-app-api:latest
+
     when:
       branch:
         - master
