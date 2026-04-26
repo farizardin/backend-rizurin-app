@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: rizurin-app-api
-          image: 192.168.8.51:5000/rizurin/rizurin-app-api:latest
+          image: 192.168.8.51:5000/rizurin/prod/rizurin-app-api:placeholder
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3001
