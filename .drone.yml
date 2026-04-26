@@ -24,6 +24,8 @@ steps:
     image: node:20-alpine
     environment:
       NODE_ENV: production
+      # Pastikan secret untuk DB produksi juga ada jika database luar
+      # DB_URL: from_secret: production_db_url 
     commands:
       - npm install
       - npx sequelize-cli db:create --env production || true
@@ -35,12 +37,13 @@ steps:
   - name: build_docker_image
     image: plugins/docker
     settings:
-      registry: zot.rizurin.my.id
-      repo: zot.rizurin.my.id/rizurin/rizurin-app-api
+      registry: 192.168.8.51:5000
+      repo: 192.168.8.51:5000/rizurin/rizurin-app-api
       tags:
         - ${DRONE_BUILD_NUMBER}
         - latest
-      dry_run: true
+      dry_run: true # Hanya build, tidak push
+      insecure: true # Wajib untuk HTTP IP lokal
     when:
       branch:
         exclude:
@@ -49,8 +52,8 @@ steps:
   - name: push_docker_image
     image: plugins/docker
     settings:
-      registry: zot.rizurin.my.id
-      repo: zot.rizurin.my.id/rizurin/rizurin-app-api
+      registry: 192.168.8.51:5000
+      repo: 192.168.8.51:5000/rizurin/rizurin-app-api
       tags:
         - ${DRONE_BUILD_NUMBER}
         - latest
@@ -58,7 +61,7 @@ steps:
         from_secret: docker_user
       password:
         from_secret: docker_pass
-      # Hapus insecure: true karena sudah HTTPS via Cloudflare
+      insecure: true # Wajib untuk HTTP IP lokal
     when:
       branch:
         - master
@@ -72,8 +75,7 @@ steps:
       - mkdir -p ~/.kube
       - echo "$KUBECONFIG_CONTENT" > ~/.kube/config
       - kubectl apply -f k8s/
-      # Update image path menggunakan domain, bukan IP lokal
-      - kubectl set image deployment/rizurin-app-api rizurin-app-api=zot.rizurin.my.id/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} -n rizurin
+      - kubectl set image deployment/rizurin-app-api rizurin-app-api=192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} -n rizurin
       - kubectl rollout status deployment/rizurin-app-api -n rizurin
     when:
       branch:
