@@ -1,0 +1,82 @@
+kind: pipeline
+type: docker
+name: default
+
+services:
+  - name: database
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: rizurin_app_test
+
+steps:
+  - name: test
+    image: node:20-alpine
+    environment:
+      DB_HOST: database
+    commands:
+      - sleep 5
+      - npm install
+      - npx sequelize-cli db:create --env test || true
+      - npm test
+
+  - name: migrate_production_db
+    image: node:20-alpine
+    environment:
+      NODE_ENV: production
+      # Pastikan secret untuk DB produksi juga ada jika database luar
+      # DB_URL: from_secret: production_db_url 
+    commands:
+      - npm install
+      - npx sequelize-cli db:create --env production || true
+      - npx sequelize-cli db:migrate --env production
+    when:
+      branch:
+        - master
+
+  - name: build_docker_image
+    image: plugins/docker
+    settings:
+      registry: 192.168.8.51:5000
+      repo: 192.168.8.51:5000/rizurin/rizurin-app-api
+      tags:
+        - ${DRONE_BUILD_NUMBER}
+        - latest
+      dry_run: true # Hanya build, tidak push
+      insecure: true # Wajib untuk HTTP IP lokal
+    when:
+      branch:
+        exclude:
+          - master
+
+  - name: push_docker_image
+    image: plugins/docker
+    settings:
+      registry: 192.168.8.51:5000
+      repo: 192.168.8.51:5000/rizurin/rizurin-app-api
+      tags:
+        - ${DRONE_BUILD_NUMBER}
+        - latest
+      username:
+        from_secret: docker_user
+      password:
+        from_secret: docker_pass
+      insecure: true # Wajib untuk HTTP IP lokal
+    when:
+      branch:
+        - master
+
+  - name: deploy_to_k8s
+    image: bitnami/kubectl:latest
+    environment:
+      KUBECONFIG_CONTENT:
+        from_secret: kubeconfig
+    commands:
+      - mkdir -p ~/.kube
+      - echo "$KUBECONFIG_CONTENT" > ~/.kube/config
+      - kubectl apply -f k8s/
+      - kubectl set image deployment/rizurin-app-api rizurin-app-api=192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} -n rizurin
+      - kubectl rollout status deployment/rizurin-app-api -n rizurin
+    when:
+      branch:
+        - master
