@@ -24,6 +24,8 @@ steps:
     image: node:20-alpine
     environment:
       NODE_ENV: production
+      # Pastikan secret untuk DB produksi juga ada jika database luar
+      # DB_URL: from_secret: production_db_url 
     commands:
       - npm install
       - npx sequelize-cli db:create --env production || true
@@ -32,25 +34,34 @@ steps:
       branch:
         - master
 
-  - name: build_and_push_docker
-    image: docker:20.10
-    environment:
-      DOCKER_USER:
-        from_secret: docker_user
-      DOCKER_PASS:
-        from_secret: docker_pass
-      DOCKER_TLS_CERTDIR: ""
-    volumes:
-      - name: dockersock
-        path: /var/run/docker.sock
-    commands:
-      - echo "$DOCKER_PASS" | docker login http://192.168.8.51:5000 -u "$DOCKER_USER" --password-stdin
-      - docker buildx create --use || true
-      - docker buildx build --platform linux/amd64 --output type=docker -t 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} .
-      - docker tag 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER} 192.168.8.51:5000/rizurin/rizurin-app-api:latest
-      - docker push 192.168.8.51:5000/rizurin/rizurin-app-api:${DRONE_BUILD_NUMBER}
-      - docker push 192.168.8.51:5000/rizurin/rizurin-app-api:latest
+  - name: build_docker_image
+    image: plugins/docker
+    settings:
+      registry: 192.168.8.51:5000
+      repo: 192.168.8.51:5000/rizurin/rizurin-app-api
+      tags:
+        - ${DRONE_BUILD_NUMBER}
+        - latest
+      dry_run: true # Hanya build, tidak push
+      insecure: true # Wajib untuk HTTP IP lokal
+    when:
+      branch:
+        exclude:
+          - master
 
+  - name: push_docker_image
+    image: plugins/docker
+    settings:
+      registry: 192.168.8.51:5000
+      repo: 192.168.8.51:5000/rizurin/rizurin-app-api
+      tags:
+        - ${DRONE_BUILD_NUMBER}
+        - latest
+      username:
+        from_secret: docker_user
+      password:
+        from_secret: docker_pass
+      insecure: true # Wajib untuk HTTP IP lokal
     when:
       branch:
         - master
@@ -69,8 +80,3 @@ steps:
     when:
       branch:
         - master
-
-volumes:
-  - name: dockersock
-    host:
-      path: /var/run/docker.sock
