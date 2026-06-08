@@ -12,8 +12,9 @@ class HomeController extends BaseController {
             title: 'AI & Deep Learning',
             descriptions: [
               "Custom AI model development",
-              "LLM fine-tuning & inference optimization",
-              "Computer vision & audio processing",
+              "AI model fine-tuning & inference optimization",
+              "Machine learning & deep learning research",
+              "AI computation efficiency enhancement",
               "Research-grade experimentation",
             ]
           },
