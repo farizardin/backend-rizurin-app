@@ -1,7 +1,9 @@
 
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const ROUTES = require('./routes');
+const authMiddleware = require('./middlewares/authMiddleware');
 
 class App {
   constructor() {
@@ -17,6 +19,7 @@ class App {
       origin: [
         'https://rizurin.my.id',
         'http://rizurin.my.id',
+        'http://localhost:3002',
         'http://localhost:3000', // untuk development
         'http://localhost:5173', // untuk vite development
       ],
@@ -27,6 +30,7 @@ class App {
 
     this.app.use(cors(corsOptions));
     this.app.use(express.json());
+    this.app.use(cookieParser());
     this.app.use(require('./middlewares/visitorTracker'));
   }
 
@@ -34,6 +38,12 @@ class App {
     this.app.use('/index', new ROUTES.HomeRoutes().router);
     this.app.use('/health', new ROUTES.HealthRoutes().router);
     this.app.use('/auth', new ROUTES.AuthRoutes().router);
+    this.app.use('/image-processing', new ROUTES.ImageProcessingRoutes().router);
+    this.app.use('/project', new ROUTES.ProjectRoutes().router);
+
+    this.app.get('/auth/me', authMiddleware, (req, res) => {
+      res.json({ success: true, data: req.user });
+    });
 
 
     // Global error handler must be last
