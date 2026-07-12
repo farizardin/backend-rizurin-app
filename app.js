@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 const ROUTES = require('./routes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
@@ -31,6 +32,7 @@ class App {
     this.app.use(cors(corsOptions));
     this.app.use(express.json());
     this.app.use(cookieParser());
+    this.app.use(morgan('dev'));
     this.app.use(require('./middlewares/visitorTracker'));
   }
 
