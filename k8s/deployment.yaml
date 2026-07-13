@@ -33,6 +33,13 @@ spec:
               value: "production"
             - name: DB_HOST
               value: "192.168.8.50"
+            - name: JWT_SECRET
+              value: "rizurin_super_secret_jwt_key_for_user_service"
+            - name: CASDOOR_JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: casdoor-secret
+                  key: public-key
           livenessProbe:
             httpGet:
               path: /health
