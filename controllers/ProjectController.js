@@ -30,8 +30,8 @@ class ProjectController extends BaseController {
                 items: [
                     { name: "Microservices", description: "Decoupled architecture where applications are broken down into smaller services." },
                     { name: "Microfrontend", description: "Extending microservices to the frontend for independent deployment and development." },
-                    { name: "Service Repository Pattern", description: "Separation of business logic and data access logic (used in backend apps)." },
-                    { name: "CQRS, Inbox, Outbox Pattern", description: "Command Query Responsibility Segregation (will be implemented soon on backend apps)." },
+                    { name: "Service Repository Pattern", description: "Separation of business logic and data access logic." },
+                    { name: "CQRS, Inbox, Outbox Pattern", description: "Command Query Responsibility Segregation." },
                     { name: "Token Relay Auth Pattern", description: "Securely passing authentication tokens between microservices." },
                     { name: "Atomic Design", description: "Methodology for creating scalable UI design systems (used in frontend apps)." }
                 ]
